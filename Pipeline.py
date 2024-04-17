@@ -56,7 +56,7 @@ def setup_sagemaker(local = True):
 role, bucket, region, boto3_session, sagemaker_Sess = setup_sagemaker(True)
 
 
-cache_config = CacheConfig(enable_caching=True, expire_after="PT1H")
+cache_config = CacheConfig(enable_caching=True, expire_after="30d")
 
 processing_inputs = [ProcessingInput(input_name = "raw_input_data",\
                                       source = "s3://" + bucket + "/raw_data/womens_clothing_ecommerce_reviews.csv",\
@@ -226,14 +226,139 @@ evaluation_step = ProcessingStep(
     cache_config=cache_config)   
 
 
+
+from sagemaker.workflow.model_step import ModelStep
+from sagemaker.model_metrics import MetricsSource, ModelMetrics 
+from sagemaker.pytorch.model import PyTorchModel
+from sagemaker.workflow.pipeline_context import PipelineSession
+
+pipeline_session = PipelineSession(boto_session = boto3_session)
+
+model_metrics = ModelMetrics(
+    model_statistics=MetricsSource(
+        s3_uri="{}/evaluation.json".format(
+            evaluation_step.arguments["ProcessingOutputConfig"]["Outputs"][0]["S3Output"]["S3Uri"]
+        ),
+        content_type="application/json"
+    )
+)
+
+pytorch_model = PyTorchModel(
+   model_data=training_step.properties.ModelArtifacts.S3ModelArtifacts,
+   entry_point='deployment.py',
+   source_dir='src/',
+   framework_version = "1.13",
+   py_version = "py39",
+   role=role,
+   sagemaker_session = pipeline_session)
+
+
+register_step_arguments = pytorch_model.register(
+   content_types=["application/json"],
+   response_types=["application/json"],
+   inference_instances=["ml.t2.medium"],
+   transform_instances=["ml.m5.large"],
+   model_package_group_name='group1',
+   model_metrics=model_metrics,
+   approval_status="Approved"
+)
+
+register_step = ModelStep(
+   name = "ModelRegister",
+   step_args = register_step_arguments,
+
+)
+
+create_step_arguments = pytorch_model.create("ml.t2.medium")
+
+create_step = ModelStep(
+    name="ModelCreate",
+    step_args=create_step_arguments,
+)
+
+
+register_properties = register_step.properties
+
+
+from src import iam_helper
+
+from datetime import datetime
+
+
+lambda_role = iam_helper.create_lambda_role("lambda-deployment-role", boto3_session)
+
+now_time = datetime.now()
+# Custom Lambda Step
+from sagemaker.lambda_helper import Lambda
+from sagemaker.workflow.lambda_step import (
+    LambdaStep,
+    LambdaOutput,
+    LambdaOutputTypeEnum,
+)
+
+function_name = "sagemaker-lambda-step-endpoint-deploy-" + now_time.strftime("%Y-%m-%d-%H-%M")
+
+# Lambda helper class can be used to create the Lambda function
+func = Lambda(
+    function_name=function_name,
+    execution_role_arn=lambda_role,
+    script="src/lambda_helper.py",
+    handler="lambda_helper.lambda_handler",
+)
+
+endpoint_config_name = "demo-lambda-deploy-endpoint-config-" + now_time.strftime("%Y-%m-%d-%H-%M")
+endpoint_name = "demo-lambda-deploy-endpoint-" + now_time.strftime("%Y-%m-%d-%H-%M")
+
+output_param_1 = LambdaOutput(output_name="statusCode", output_type=LambdaOutputTypeEnum.String)
+output_param_2 = LambdaOutput(output_name="body", output_type=LambdaOutputTypeEnum.String)
+output_param_3 = LambdaOutput(output_name="other_key", output_type=LambdaOutputTypeEnum.String)
+
+deploy_step = LambdaStep(
+    name="LambdaStep",
+    lambda_func=func,
+    inputs={
+        "model_name": create_step.properties.ModelName,
+        "endpoint_config_name": endpoint_config_name,
+        "endpoint_name": endpoint_name,
+    },
+    outputs=[output_param_1, output_param_2, output_param_3],
+)
+
+
+from sagemaker.workflow.conditions import ConditionGreaterThanOrEqualTo
+from sagemaker.workflow.condition_step import (
+    ConditionStep,
+    JsonGet,
+)
+
+minimum_accuracy_condition = ConditionGreaterThanOrEqualTo(
+    left=JsonGet(
+        step=evaluation_step,
+        property_file=evaluation_report,
+        json_path="metrics.accuracy.value",
+    ),
+    right=90 # minimum accuracy threshold
+)
+
+condition_step = ConditionStep(
+    name="AccuracyCondition",
+    conditions=[minimum_accuracy_condition],
+    if_steps=[register_step, create_step, deploy_step], # successfully exceeded or equaled the minimum accuracy, continue with model registration
+    else_steps=[], # did not exceed the minimum accuracy, the model will not be registered
+)
+
+
+
+
+
 pipeline = Pipeline(
-    name='Processing-Training-Pipeline4',
+    name='Processing-Training-Pipeline-2024-04-16-20-41',
     parameters=[],
-    steps=[processing_step, training_step, evaluation_step],
+    steps=[processing_step, training_step, evaluation_step, condition_step],
     sagemaker_session=sagemaker_Sess
 )
 
-response = pipeline.create(role_arn=role)
+response = pipeline.update(role_arn=role)
 execution = pipeline.start()
 
 
