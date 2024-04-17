@@ -4,13 +4,14 @@ import os
 from dotenv import load_dotenv
 from sagemaker.workflow.pipeline import Pipeline
 from sagemaker.workflow.steps import CacheConfig
-from data_preparation_step import define_processing_step
-from training_step import define_training_step
-from evaluation_step import define_evaluation_step
-from create_register_step import define_create_register_step
-from deployment_step import define_deployment_step
-from condition_step import define_condition_step
+from pipeline_steps.data_preparation_step import define_processing_step
+from pipeline_steps.training_step import define_training_step
+from pipeline_steps.evaluation_step import define_evaluation_step
+from pipeline_steps.create_register_step import define_create_register_step
+from pipeline_steps.deployment_step import define_deployment_step
+from pipeline_steps.condition_step import define_condition_step
 from datetime import datetime
+
 
 
 def setup_sagemaker(local = True):
@@ -86,7 +87,7 @@ def start_pipeline(pipeline_name = 'Pipeline-2024-04-16-20-41', max_len = 500, t
     register_step, create_step = define_create_register_step(session_info, evaluation_step, training_step,
                                     model_package_group_name)
     
-    deploy_step = define_deployment_step(session_info, create_step, pipeline_name, 
+    deploy_step, endpoint_name = define_deployment_step(session_info, create_step, pipeline_name, 
                                deployment_instance_count = deployment_instance_count,
                                deployment_instance_type = deployment_instance_type)
     
@@ -104,7 +105,21 @@ def start_pipeline(pipeline_name = 'Pipeline-2024-04-16-20-41', max_len = 500, t
     pipeline_response = pipeline.upsert(role_arn=role)
     pipeline_execution = pipeline.start()
     
-    return pipeline_response, pipeline_execution
+    print("Waiting for the pipeline run to finish...")
+    
+    pipeline_execution.wait(delay = 10, max_attempts = 240)
+    
+    execusion_info = pipeline_execution.describe()
+    
+    pipeline_status = execusion_info["PipelineExecutionStatus"]
+    
+    if pipeline_status == "Succeeded":
+        print("Pipeline run was successful")
+    
+    else:
+        print("Pipeline run failed")
+    
+    return pipeline_response, pipeline_execution, endpoint_name, boto3_session, pipeline_status
 
 
     
@@ -164,7 +179,7 @@ if __name__ == "__main__":
     
     model_package_group_name = "group1"
     
-    pipeline_response, pipeline_execution = start_pipeline(pipeline_name, max_len, train_size ,
+    pipeline_response, pipeline_execution, endpoint_name, boto3_session = start_pipeline(pipeline_name, max_len, train_size ,
                        validation_size, test_size, processing_instacne_type, 
                        processing_instance_count, embed_dim, lstm_size, bidirectional,
                        num_layers, dropout, learning_rate, epochs, threshold, 

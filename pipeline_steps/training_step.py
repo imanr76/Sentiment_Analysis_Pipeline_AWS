@@ -37,7 +37,7 @@ def define_training_step(session_info, processing_step, train_instance_type = "m
                      "vocabulary" : TrainingInput(s3_data=processing_properties.ProcessingOutputConfig\
                                                               .Outputs['vocabulary'].S3Output.S3Uri)}
     estimator = PytorchEstimator(
-                                entry_point = "./src/training.py",
+                                entry_point = "pipeline_steps/src/training.py",
                                 framework_version = "1.13",
                                 py_version = "py39",
                                 role = role,

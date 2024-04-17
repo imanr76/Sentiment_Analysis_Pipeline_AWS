@@ -23,7 +23,7 @@ def define_create_register_step(session_info, evaluation_step, training_step,
     pytorch_model = PyTorchModel(
        model_data=training_step.properties.ModelArtifacts.S3ModelArtifacts,
        entry_point='deployment.py',
-       source_dir='src/',
+       source_dir='pipeline_steps/src/',
        framework_version = "1.13",
        py_version = "py39",
        role=role,

@@ -43,7 +43,7 @@ def define_processing_step(session_info, processing_instacne_type = "ml.t3.large
     
     processing_step = ProcessingStep(
         name='DataPreparation', 
-        code='src/data_preparation.py',
+        code='pipeline_steps/src/data_preparation.py',
         processor=processor,
         inputs=processing_inputs,
         outputs=processing_outputs,

@@ -42,7 +42,7 @@ def define_evaluation_step(session_info, processing_step, training_step,
         
     evaluation_step = ProcessingStep(
         name = 'Evaluation', 
-        code = 'src/evaluation.py',
+        code = 'pipeline_steps/src/evaluation.py',
         processor = processor,
         inputs = processing_inputs,
         outputs = processing_outputs,

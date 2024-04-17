@@ -5,8 +5,8 @@ from sagemaker.workflow.lambda_step import (
     LambdaOutput,
     LambdaOutputTypeEnum,
 )
-import src
-from src import lambda_role_creator
+
+from pipeline_steps.src import lambda_role_creator
 from datetime import datetime
 
 
@@ -28,8 +28,8 @@ def define_deployment_step(session_info, create_step, pipeline_name,
     func = Lambda(
         function_name=function_name,
         execution_role_arn=lambda_role,
-        script="src/lambda_function.py",
-        handler="lambda_helper.lambda_handler",
+        script="pipeline_steps/src/lambda_function.py",
+        handler="lambda_function.lambda_handler",
     )
     
     
@@ -50,4 +50,4 @@ def define_deployment_step(session_info, create_step, pipeline_name,
         outputs = [output_param_1, output_param_2],
     )
     
-    return deploy_step
+    return deploy_step, endpoint_name
