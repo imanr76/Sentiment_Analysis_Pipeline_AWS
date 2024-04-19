@@ -33,7 +33,7 @@ def wait_for_endpoint(endpoint_name, boto_session):
             print("Endpoint is now available.")
             break
         elif status == "Failed":
-            raise RuntimeError("Endpoint creation failed.")
+            print("Endpoint creation failed.")
         print("Endpoint status:", status)
         time.sleep(10)
         
@@ -73,26 +73,27 @@ if __name__ == "__main__":
     epochs = 5
     # Setting the threshold for positive and negative labels
     threshold = 0.5
-
+    # The batch size to be used during model training
     batch_size = 32
-
+    # The instance type (VM type) for the training job 
     train_instance_type = "ml.m5.xlarge"
-
+    # The number of VM nodes to use for training job
     train_instance_count = 1
-    # The type of instance to run the job on
+    # The type of instance to run the evaluation job on
     evaluation_instacne_type = "ml.t3.large"
-    # The number of instances to use for processing job
+    # The number of VM nodes to use for evaluation job
     evaluation_instance_count = 1
+    # The number of VM nodes to use for deployment and inference    
     deployment_instance_count = 1
-
+    # The type of VM to use for deployment and inference    
     deployment_instance_type = "ml.t2.medium"
-
+    #The minimum acceptable threshold for model accuracy to deploy the model
     min_accuracy_threshold = 50
-    
+    # Whether to cache steps of the pipeline
     cache = True
-    
+    # The name of the model package group, all the trained models will be saved as different versions of this model
     model_package_group_name = "group1"
-    
+    # Running the pipelne
     pipeline_response, pipeline_execution, endpoint_name, boto3_session, pipeline_status\
         = start_pipeline(pipeline_name, max_len, train_size ,
                        validation_size, test_size, processing_instacne_type, 
@@ -102,10 +103,12 @@ if __name__ == "__main__":
                        evaluation_instacne_type , evaluation_instance_count, 
                        deployment_instance_count, deployment_instance_type,
                        min_accuracy_threshold, cache, model_package_group_name)
-    
+    # Waits for the pipeline run to finish and for the model endpoint to 
+    # become responsive, then sends HTTP requests to the model and gets
+    # a prediction
     if pipeline_status == "Succeeded":
         
-        print("aiting for endpoint to become avilable...")
+        print("Waiting for endpoint to become avilable..\n.")
         
         review = "I absoloutley love this product, it is amazing, definitely recommend you to buy."
         

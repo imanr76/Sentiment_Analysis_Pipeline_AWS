@@ -23,6 +23,15 @@ nltk.download('wordnet')
 #------------------------------------------------------------------------------
 # Function Definitions
 def parse_args():
+    """
+    Parses the inputs to the script. 
+
+    Returns
+    -------
+    args : obj
+        Parsed inputs.
+
+    """
     parser = argparse.ArgumentParser(description='processing job')
     
     parser.add_argument("--max-len", default = 500)
@@ -240,9 +249,7 @@ def process_data(max_len = 500, train_size = 0.8, validation_size = 0.15, test_s
     # Converting the star rating to sentiment and dropping the rating column as it is not needed anymore
     data_transformed["sentiment"] = data_transformed["rating"].apply(lambda rating: rating_to_sentiment(rating))
     data_transformed.drop(columns = "rating", inplace = True)
-    # Saving the transformed dataset
-    # data_transformed.to_csv("./data/raw_data/womens_clothing_ecommerce_reviews_transformed.csv", index = False)
-    
+
     
     #------------------------------------------------------------------------------
     # Balancing the dataset
@@ -252,28 +259,16 @@ def process_data(max_len = 500, train_size = 0.8, validation_size = 0.15, test_s
     data_transformed_balanced = data_transformed_grouped_for_balance.apply(lambda x: \
                                     x.sample(data_transformed.groupby(["sentiment"]).size().min()))\
                                     .reset_index(drop = True)# Saving the balanced dataset
-    # Saving the balanced dataset
-    # data_transformed_balanced.to_csv("./data/raw_data/womens_clothing_ecommerce_reviews_balanced.csv", index = False)
-    
+                                    
     # Dividing the data into train, validation and test sets
     training_data, temp_data = train_test_split(data_transformed_balanced, test_size = 1 - train_size, random_state = 10)
     validation_data, test_data = train_test_split(temp_data, test_size = test_size / (test_size + validation_size), random_state = 10)
     
-    # Saving the train, validation and test datasets
-    # training_data.to_csv("./data/training/womens_clothing_ecommerce_reviews_balanced_training.csv", index = False)
-    # validation_data.to_csv("./data/validation/womens_clothing_ecommerce_reviews_balanced_validation", index = False)
-    # test_data.to_csv("./data/test/womens_clothing_ecommerce_reviews_balanced_test", index = False)
-    
     #------------------------------------------------------------------------------
     # Preprocessing the data for the NLP task
     print("\nApplying feature engineering tasks\n")
-    # Creating a text corpus from the training and validation data
-    # corpus_data = pd.concat([training_data["review"], validation_data["review"]], axis = 0)
     corpus = '\n'.join(training_data["review"].values)
     
-    # Saing the text corpus for future references and use
-    # with open("./data/corpus.txt", "w") as file:
-    #     file.write(corpus)
     
     # Cleaning he corpus text
     corpus_cleaned = cleanup_text(corpus)
@@ -294,11 +289,6 @@ def process_data(max_len = 500, train_size = 0.8, validation_size = 0.15, test_s
     training_data_processed = training_data[["review_processed", "sentiment"]]
     validation_data_processed  = validation_data[["review_processed", "sentiment"]]
     test_data_processed  = test_data[["review_processed", "sentiment"]]
-    
-    # Saving the datasets for future use and reference
-    # training_data_processed.to_csv("./data/training/training_data_processed.csv", index = False)
-    # validation_data_processed.to_csv("./data/validation/validation_data_processed.csv", index = False)
-    # test_data_processed.to_csv("./data/test/test_data_processed.csv", index = False)
     
     # Converting the dataframe data into tensors
     training_data_tensor = convert_to_tensor(training_data_processed)
@@ -321,8 +311,9 @@ def process_data(max_len = 500, train_size = 0.8, validation_size = 0.15, test_s
 #------------------------------------------------------------------------------
 # Running the script directly
 if __name__ == "__main__":
-    args = parse_args()
     
+    # Reading the passed arguments to the script
+    args = parse_args()
     # Maximum review text sequence length
     max_len = int(args.max_len)
     # Fraction of training data of all data

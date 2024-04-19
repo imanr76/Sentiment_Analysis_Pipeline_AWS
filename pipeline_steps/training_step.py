@@ -10,8 +10,55 @@ def define_training_step(session_info, processing_step, train_instance_type = "m
                          embed_dim = 20, lstm_size = 20, bidirectional = True, num_layers = 1,
                          dropout = 0, learning_rate = 0.001, epochs = 5, threshold = 0.5,
                          batch_size = 32):
+    """
+    Reads the train, validation and test data prepared in the processing step. Trains a model and saved the followings:
+        - pytorch model object
+        - information about model metadata, structure etc. 
+        - The training and evaluation losses and accuracies for each epoch. 
+        - The confusion matrix report from the test data. 
 
-    
+    NOTE: To change the location on S3 where the model artifacts are saved change the "output_path" parameter in
+    the PytorchEstimator object definition.
+
+    Parameters
+    ----------
+    session_info : obj
+        Information about the boto3 and sagemaker sessions.
+    processing_step : obj
+        The output of the processing step.
+    train_instance_type : str, optional
+        The type of VM nodes to use for training job. The default is "ml.m5.xlarge".
+    train_instance_count : int, optional
+        The number of VM nodes to use for training job. The default is 1.
+    cache_config : obj, optional
+        The cache config object determining whether or not to cache the step and for how long. 
+        The default is CacheConfig(enable_caching = False, expire_after = "30d").
+    embed_dim : int, optional
+        Size of the embedding vector for each token. The default is 20.
+    lstm_size : int, optional
+        Size of the lstm output. The default is 20.
+    bidirectional : boolean, optional
+        Whether to run a bidirectional LSTM. The default is True.
+    num_layers : int, optional
+        Number of LSTM layers. The default is 1.
+    dropout : float, optional
+        LSTM dropout. The default is 0.
+    learning_rate : float, optional
+        Learning rate for trianing the model. The default is 0.001.
+    epochs : int, optional
+        Number of epochs to run. The default is 5.
+    threshold : float, optional
+        Setting the threshold for positive and negative labels. The default is 0.5.
+    batch_size : int, optional
+        The batch size to be used during model training. The default is 32.
+
+    Returns
+    -------
+    training_step : obj
+        Output of the training step.
+
+    """
+
     role, bucket, region, boto3_session, sagemaker_Sess = session_info
     
     hyperparameters = {
@@ -36,6 +83,7 @@ def define_training_step(session_info, processing_step, train_instance_type = "m
                                                               .Outputs['test_data'].S3Output.S3Uri),
                      "vocabulary" : TrainingInput(s3_data=processing_properties.ProcessingOutputConfig\
                                                               .Outputs['vocabulary'].S3Output.S3Uri)}
+        
     estimator = PytorchEstimator(
                                 entry_point = "pipeline_steps/src/training.py",
                                 framework_version = "1.13",

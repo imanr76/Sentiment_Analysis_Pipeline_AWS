@@ -56,13 +56,33 @@ class sentiment(nn.Module):
         else:
             x = x[-1, :, :]
             x = x.reshape(x.size(0),-1)
-        # PAssing the LSTM output through a linear and a softmax layer
+        # Passing the LSTM output through a linear and a softmax layer
         x = self.linear(x)
         return x[:,0]
     
     
 
 def model_fn(model_dir):
+    """
+    Reads the model artifacts. It then generates a model instance which is then used to make
+    predictions on the input reviews.  
+
+    Parameters
+    ----------
+    model_dir : str
+        The path to the model artifacts.
+
+    Returns
+    -------
+    vocabulary : TYPE
+        DESCRIPTION.
+    model_info : TYPE
+        DESCRIPTION.
+    model : TYPE
+        DESCRIPTION.
+
+    """
+    
     vocabulary = torch.load(model_dir + "/vocabulary.pth")
 
     with open(model_dir+ "/model_info.json") as file:
@@ -80,16 +100,16 @@ def model_fn(model_dir):
     bidirectional = bool(model_info["bidirectional"])
     # Number of LSTM layers
     num_layers = int(model_info["num_layers"])
-    
+    # Instansiating a model instance
     model = sentiment(len(vocabulary), embed_dim, lstm_size, bidirectional, num_layers)
-    
+    # Populating the model with the trained parameters. 
     model.load_state_dict(model_params)
     
     return model
 
 def evaluate(model, test_dataset, threshold):
     """
-    Evaluates the classification of the model based on the test set. 
+    Evaluates the classification accuracy of the model based on the test set. 
 
     Parameters
     ----------
@@ -128,7 +148,7 @@ if __name__ == "__main__":
     
     model_dir = "/opt/ml/processing/model/"
     model_tar_path = model_dir + 'model.tar.gz'
-                  
+     # Unpacking the model artifacts           
     with tarfile.open(model_tar_path) as tar_f:
         tar_f.extractall(model_dir)
     
@@ -148,7 +168,7 @@ if __name__ == "__main__":
              }
     
     evaluation_path = '/opt/ml/processing/output/evaluation.json'
-       
+    # Saving the test set accuracy as JSON
     with open(evaluation_path, "w") as f:
         json.dump(report_dict, f)
     

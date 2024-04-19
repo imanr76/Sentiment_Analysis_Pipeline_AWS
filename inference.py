@@ -5,12 +5,28 @@ from dotenv import load_dotenv
 import os
 
 def make_inference(review, endpoint_name):
+    """
+    Sends a HTTP request encapsulating the input review to the input endpoint and prints the predicted sentiment. 
 
+    Parameters
+    ----------
+    review : str
+        The review to be sent to the endpoint.
+    endpoint_name : str
+        The sagemaker endpoint to invoke for inference.
+
+    Returns
+    -------
+    result : str
+        Sentiment of the input review (Positive, Negative).
+
+    """
+    # Loading the environment variables
     load_dotenv()
     aws_access_key = os.getenv("AWS_PUBLIC_KEY")
     aws_secret_key = os.getenv("AWS_PRIVATE_KEY")
     aws_region = os.getenv("AWS_REGION")
-    
+    # Creating the endpoint_url using the endpoint name and the AWS region. 
     endpoint_url="https://runtime.sagemaker." + aws_region + ".amazonaws.com/endpoints/" + endpoint_name + "/invocations"
     
     # Example input data

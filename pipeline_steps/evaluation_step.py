@@ -10,7 +10,34 @@ from sagemaker.workflow.steps import CacheConfig
 def define_evaluation_step(session_info, processing_step, training_step, 
                            evaluation_instacne_type = "ml.t3.large", evaluation_instance_count = 1,
                            cache_config = CacheConfig(enable_caching = False, expire_after = "30d")):
-    
+    """
+    Runs the trained model on the test set and records the calculated accuracy in a property file.
+    This property file is then used in the condition step to make decision for continuing the pipeline. 
+
+    Parameters
+    ----------
+    session_info : obj
+        Information about the boto3 and sagemaker sessions.
+    processing_step : obj
+        The output of the processing step.
+    training_step : obj
+        The output of the training step.
+    evaluation_instacne_type : str, optional
+        The type of VM nodes to use for evaluation job. The default is "ml.t3.large".
+    evaluation_instance_count : int, optional
+        The number of VM nodes to use for evaluation job. The default is 1.
+    cache_config : obj, optional
+        The cache config object determining whether or not to cache the step and for how long. 
+        The default is CacheConfig(enable_caching = False, expire_after = "30d").
+
+    Returns
+    -------
+    evaluation_step : obj
+        The output of the evaluation step.
+    evaluation_report : obj
+        The generated evaluation report for the condition step.
+
+    """
     role, bucket, region, boto3_session, sagemaker_Sess = session_info
     
     evaluation_report = PropertyFile(

@@ -1,11 +1,29 @@
 import boto3
 import json
 
-
-
-
 def create_lambda_role(role_name, boto_session):
+    """
+    Creates a role that could be taken up by the AWS Lambda function that deploys the model. This role allows
+    LAmbda to access the sagemaker model registry and to deploy the model to an endpoint. 
+    
+    
+    Parameters
+    ----------
+    role_name : str
+        name of the role that we are creating.
+    boto_session : obj
+        The boto3 session object to be used.
+
+    Returns
+    -------
+    role_arn : str
+        The AWS ARN of the role just created.
+
+    """
+    # Instansiating a boto3 IAM client
     iam = boto_session.client("iam")
+    # Trying to create the role and attach the required policies
+    # If role already exists, uses the preexisting role.
     try:
         response = iam.create_role(
             RoleName=role_name,

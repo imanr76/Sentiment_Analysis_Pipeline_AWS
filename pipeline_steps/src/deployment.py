@@ -134,6 +134,26 @@ class sentiment(nn.Module):
     
 
 def model_fn(model_dir):
+    """
+    Reads the model artifacts. It then generates a model instance which is then used to make
+    predictions on the input reviews.  
+
+    Parameters
+    ----------
+    model_dir : str
+        The path to the model artifacts.
+
+    Returns
+    -------
+    vocabulary : TYPE
+        DESCRIPTION.
+    model_info : TYPE
+        DESCRIPTION.
+    model : TYPE
+        DESCRIPTION.
+
+    """
+    
     vocabulary = torch.load(model_dir + "/vocabulary.pth")
 
     with open(model_dir+ "/model_info.json") as file:
@@ -151,19 +171,34 @@ def model_fn(model_dir):
     bidirectional = bool(model_info["bidirectional"])
     # Number of LSTM layers
     num_layers = int(model_info["num_layers"])
-    
+    # Instansiating a model instance
     model = sentiment(len(vocabulary), embed_dim, lstm_size, bidirectional, num_layers)
-    
+    # Populating the model with the trained parameters. 
     model.load_state_dict(model_params)
     
     return (vocabulary, model_info, model)
 
 def predict_fn(input_data, model):
+    """
+    Uses the created model object to make a prediction on the input review. 
 
+    Parameters
+    ----------
+    input_data : str
+        The review text to make a prediction on.
+    model : obj
+        Pytorch model to use for generating predictions.
+
+    Returns
+    -------
+    str
+        The predicted sentiment (Positive, Negative).
+
+    """
     vocabulary, model_info, model = model
     
     model.eval()
-    
+    # Processing the input review and transoforming it to list of indices
     review_processed = process_reviews(input_data, word_tokenize, WordNetLemmatizer(), vocabulary, len(vocabulary))
     
     threshold = float(model_info["threshold"])
@@ -177,10 +212,11 @@ def predict_fn(input_data, model):
             return "Negative"
 
 def input_fn(serialized_input_data, content_type='application/jsonlines'): 
-
+    # REading the input data from the jason format.
     input_data = json.loads(serialized_input_data)
     return input_data["input_text"]
 
 def output_fn(prediction_output, content_type):
+    # Passing the prediction to the response.
     return json.dumps(prediction_output)
 

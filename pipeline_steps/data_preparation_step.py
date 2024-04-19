@@ -9,6 +9,39 @@ from sagemaker.workflow.steps import CacheConfig
 def define_processing_step(session_info, processing_instacne_type = "ml.t3.large", 
                            processing_instance_count = 1, cache_config = CacheConfig(enable_caching = False, expire_after = "30d"),\
                            max_len = 500, train_size = 0.8, validation_size = 0.15, test_size = 0.05):
+    """
+    Reads the data from an S3 bucket, preproceses it, creates a pytorch vocabulary from the training data
+    and saves the train, test and validation pytorch datasets to S3. 
+
+    Parameters
+    ----------
+    session_info : obj
+        Information about the boto3 and sagemaker sessions.
+    processing_instacne_type : str, optional
+        The type of instance to run the job on. The default is "ml.t3.large".
+    processing_instance_count : int, optional
+        The number of instances to use for processing job. The default is 1.
+    cache_config : obj, optional
+        The cache config object determining whether or not to cache the step and for how long. 
+        The default is CacheConfig(enable_caching = False, expire_after = "30d").
+    max_len : int, optional
+        Maximum review text sequence length. The default is 500.
+    train_size : float, optional
+        Fraction of training data of all data. The default is 0.8.
+    validation_size : float, optional
+        Fraction of validation data of all data. The default is 0.15.
+    test_size : float, optional
+        Fraction of test data of all data. The default is 0.05.
+    
+    NOTE: To change the location of the raw data, train, validation or test data, 
+    change the "source" parameter in the processing_input and processing_output objects. 
+    
+    Returns
+    -------
+    processing_step : obj
+        The output of the processing step.
+
+    """
     
     role, bucket, region, boto3_session, sagemaker_Sess = session_info
     

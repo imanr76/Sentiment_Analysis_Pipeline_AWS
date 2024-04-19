@@ -301,6 +301,15 @@ class dataset(Dataset):
 
 
 def parse_args():
+    """
+    Parses the inputs to the script. 
+
+    Returns
+    -------
+    args : obj
+        Parsed inputs.
+
+    """
     parser = argparse.ArgumentParser(description='processing job')
     
     parser.add_argument("--embed_dim", default = 20)
@@ -343,7 +352,7 @@ if __name__ == "__main__":
     epochs = int(args.epochs)
     # Setting the threshold for positive and negative labels
     threshold = float(args.threshold)
-    
+    # The batch size to use during training. 
     batch_size = int(args.batch_size)
     
     with open(args.model_dir + "/model_info.json", "w") as file:

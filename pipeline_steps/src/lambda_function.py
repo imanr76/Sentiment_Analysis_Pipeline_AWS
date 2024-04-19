@@ -3,6 +3,22 @@ import boto3
 from datetime import datetime
 
 def lambda_handler(event, context):
+    """
+    Lambda function handler that deploy the registered and created model. 
+
+    Parameters
+    ----------
+    event : dict
+        Event information passed to Lambda.
+    context : dict
+        Context of the Lambda function.
+
+    Returns
+    -------
+    dict
+        The response dictionary containing the status code and a message.
+
+    """
     
     now_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     
@@ -10,7 +26,9 @@ def lambda_handler(event, context):
 
     # The name of the model created in the Pipeline CreateModelStep
     model_name = event["model_name"]
-
+    
+    # Adding the time and date to the endpoint_name and endpoint_config_ name to make them unique everytime the function is run. 
+    # If they already exist, it raises error
     endpoint_config_name = event["endpoint_config_name"] + now_time 
     endpoint_name = event["endpoint_name"] + now_time
 
