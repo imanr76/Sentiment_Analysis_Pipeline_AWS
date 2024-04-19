@@ -3,6 +3,11 @@
 ## 1. Project Description
 This project focuses on development of a Sagemaker Pipeline to train a NLP model for sentiment analysis of product reviews.
 
+
+The dataset used is the Amazon product reviews dataset publicly available from the following S3 location: 
+
+"s3://dlai-practical-data-science/data/raw/womens_clothing_ecommerce_reviews.csv"
+
 The pipeline consists of the following steps:
 
 1. Data Preparation (Processing): It read the raw data from an S3 location, processes the data and prepares trainig, test and validation datasets in the format of pytorch datasets and saves them on S3. It also creates and saves a vocabulary object which is used during the training and inference steps. 
