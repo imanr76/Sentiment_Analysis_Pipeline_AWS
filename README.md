@@ -28,6 +28,7 @@ The pipeline consists of the following steps:
 
 ## 2. Tech Stack
  - Python
+ - Pytorch
  - AWS CLI
  - AWS Python SDK
  - Sagemaker Python SDK
