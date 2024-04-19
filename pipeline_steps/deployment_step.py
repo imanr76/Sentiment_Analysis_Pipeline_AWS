@@ -8,7 +8,7 @@ from sagemaker.workflow.lambda_step import (
 
 from pipeline_steps.src import lambda_role_creator
 from datetime import datetime
-
+now_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
 
 def define_deployment_step(session_info, create_step, pipeline_name, 
@@ -16,11 +16,11 @@ def define_deployment_step(session_info, create_step, pipeline_name,
     
     role, bucket, region, boto3_session, sagemaker_Sess = session_info
     
-    now_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     
-    function_name = pipeline_name + "-lambda-function-" + now_time
-    endpoint_config_name = pipeline_name + "-endpoint-config-" + now_time
-    endpoint_name = pipeline_name + "-endpoint-" + now_time
+    
+    function_name = pipeline_name + "-lambda-function-"
+    endpoint_config_name = pipeline_name + "-endpoint-config-"
+    endpoint_name = pipeline_name + "-endpoint-"
     
     lambda_role = lambda_role_creator.create_lambda_role(pipeline_name + "-deployment-role", boto3_session)
     
