@@ -4,7 +4,8 @@ import sagemaker
 import os
 from dotenv import load_dotenv
 import subprocess
-
+import time
+from datetime import datetime
 
 def create_eventbridge_role(role_name, boto_session, pipeline_arn):
     iam = boto_session.client("iam")
@@ -94,43 +95,74 @@ def setup_sagemaker(local = True):
     return role, bucket, region, boto3_session, sagemaker_Sess
 
 
-pipeline_arn = "arn:aws:sagemaker:ca-central-1:397567358266:pipeline/Pipeline-2024-04-16-20-41"
+def setup_eventbridge_trigger(pipeline_arn, session_info = None):
 
-role, bucket, region, boto3_session, sagemaker_Sess = setup_sagemaker(True)
-
-response = create_eventbridge_role("eventbridege-role12", boto3_session, pipeline_arn)
-pattern_file = "event_pattern.json"
-rule_name = "rule1"
-
-command1 =  [
-            "aws", "events", "put-rule",
-            "--name", rule_name,
-            "--event-pattern", "file://" + pattern_file,
-            "--role-arn", response
-            ]
-
-command2 =  [
-            "aws", "events", "put-targets",
-            "--rule", rule_name,
-            "--event-bus-name", "default",
-            "--targets", f'[{\"Id\": 1, \"Arn\": {pipeline_arn}}, \"RoleArn\": {role}]'
-            ]
-
-process1 = subprocess.run(command1, capture_output=True, text=True, shell=True)
-
-print(process1.stdout)
-
-# Get the command's return code
-return_code = process1.returncode
-print(f"Return Code: {return_code}\n")
+    
+    if not session_info:
+        role, bucket, region, boto3_session, sagemaker_Sess = setup_sagemaker(True)
+    else:
+        role, bucket, region, boto3_session, sagemaker_Sess = session_info
     
     
-process2 = subprocess.run(command2, capture_output=True, text=True, shell=True)   
+    response = create_eventbridge_role("eventbridege-role", boto3_session, pipeline_arn)
     
-print(process2.stdout)
-
-# Get the command's return code
-return_code = process2.returncode
-print(f"Return Code: {return_code}\n") 
+    pattern_file = "event_pattern.json"
+    
+    now_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+    
+    rule_name = "sagemaker-pipeline-rule-" + now_time
+    
+    command1 = f"aws events put-rule\
+                --name {rule_name}\
+                --event-pattern file://{pattern_file}\
+                --role-arn {response}\
+                --profile {boto3_session.profile_name}"
+    
+    command2 = f"aws events put-targets \
+                 --rule {rule_name} \
+                 --event-bus-name default \
+                 --targets '[{{\"Id\": \"first_param\", \"Arn\": \"{pipeline_arn}\", \"RoleArn\": \"{response}\"}}]'"
+    
+    
+    process1 = subprocess.run(command1, capture_output=True, text=True, shell=True)
+    
+    print(process1.stdout)
+    print(process1.stderr)
+    # Get the command's return code
+    return_code = process1.returncode
+    print(f"Return Code: {return_code}\n")
+    
+    time.sleep(5)
+        
+    process2 = subprocess.run(command2, capture_output=True, text=True, shell=True)   
+        
+    print(process2.stdout)
+    print(process2.stderr)
+    # Get the command's return code
+    return_code = process2.returncode
+    print(f"Return Code: {return_code}\n") 
+    
+    
+#------------------------------------------------------------------------------
+# Running the script directly
+if __name__ == "__main__":    
+    
+    pipeline_arn = "arn:aws:sagemaker:ca-central-1:397567358266:pipeline/Pipeline-2024-04-16-20-41"
+    
+    setup_eventbridge_trigger(pipeline_arn)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     

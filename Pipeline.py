@@ -129,7 +129,7 @@ if __name__ == "__main__":
     
     now_time = datetime.now()
     
-    pipeline_name = 'Pipeline-2024-04-16-20-41'
+    pipeline_name = 'Pipeline-test2'
 
     # Maximum review text sequence length
     max_len = 500
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     
     model_package_group_name = "group1"
     
-    pipeline_response, pipeline_execution, endpoint_name, boto3_session = start_pipeline(pipeline_name, max_len, train_size ,
+    pipeline_response, pipeline_execution, endpoint_name, boto3_session, pipeline_status = start_pipeline(pipeline_name, max_len, train_size ,
                        validation_size, test_size, processing_instacne_type, 
                        processing_instance_count, embed_dim, lstm_size, bidirectional,
                        num_layers, dropout, learning_rate, epochs, threshold, 

@@ -11,8 +11,8 @@ def lambda_handler(event, context):
     # The name of the model created in the Pipeline CreateModelStep
     model_name = event["model_name"]
 
-    endpoint_config_name = event["endpoint_config_name"] +  + now_time
-    endpoint_name = event["endpoint_name"] +  + now_time
+    endpoint_config_name = event["endpoint_config_name"] + now_time 
+    endpoint_name = event["endpoint_name"] + now_time
 
     create_endpoint_config_response = sm_client.create_endpoint_config(
         EndpointConfigName=endpoint_config_name,

@@ -8,6 +8,7 @@ from sagemaker.workflow.lambda_step import (
 
 from pipeline_steps.src import lambda_role_creator
 from datetime import datetime
+import time
 now_time = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
 
@@ -18,13 +19,16 @@ def define_deployment_step(session_info, create_step, pipeline_name,
     
     
     
-    function_name = pipeline_name + "-lambda-function-"
+    function_name = pipeline_name + "-lambda-function-" + now_time
     endpoint_config_name = pipeline_name + "-endpoint-config-"
     endpoint_name = pipeline_name + "-endpoint-"
     
     lambda_role = lambda_role_creator.create_lambda_role(pipeline_name + "-deployment-role", boto3_session)
     
     # Lambda helper class can be used to create the Lambda function
+    
+    time.sleep(5)
+    
     func = Lambda(
         function_name=function_name,
         execution_role_arn=lambda_role,

@@ -92,6 +92,7 @@ if __name__ == "__main__":
         print("Getting some predictions\n")
         
         make_inference(review, endpoint_name)
+        
     
     
     
