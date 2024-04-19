@@ -19,6 +19,8 @@ The pipeline consists of the following steps:
 
 7. This is not part of the pipeline steps and the pipeline will finish after step 6 (deployment), however, another script is prepared for attaching a trigger to the pipeline for automatic triggering of the pipeline. After running the script, pipeline is triggered after new data is added to a specific location on S3 (potentially where the raw data is located)
 
+<img src="./pipeline.png" style="margin-top:50">
+
 ## 2. Tech Stack
  - Python
  - AWS CLI
@@ -53,3 +55,4 @@ A list of the input parameters could be viewed in the main.py script.
 - <b>.env-sample</b>: Expected environemnt variables. 
 
 - <b>main_requirements.txt</b>:the main requirements file containing the required packages for using the project.    
+
