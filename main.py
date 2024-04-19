@@ -4,6 +4,27 @@ from inference import make_inference
 import time
 
 def wait_for_endpoint(endpoint_name, boto_session):
+    """
+    Waits until the creation of the endpoint is complete and the endpoint becomes available for inference.
+
+    Parameters
+    ----------
+    endpoint_name : str
+        The name of the endpoint to observe.
+    boto_session : obj
+        boto3 session.
+
+    Raises
+    ------
+    RuntimeError
+        If endpoint is not successfully created this error is raised.
+
+    Returns
+    -------
+    None.
+
+    """
+    
     sagemaker = boto_session.client("sagemaker")
     while True:
         response = sagemaker.describe_endpoint(EndpointName=endpoint_name)
@@ -14,15 +35,16 @@ def wait_for_endpoint(endpoint_name, boto_session):
         elif status == "Failed":
             raise RuntimeError("Endpoint creation failed.")
         print("Endpoint status:", status)
-        time.sleep(10)  # Check every 30 seconds
+        time.sleep(10)
+        
 #------------------------------------------------------------------------------
 # Running the script directly
 if __name__ == "__main__":
     
+    # Getting the current time for naming purposes 
     now_time = datetime.now()
-    
+    # Name of the pipeline, if new, a new pipeline is created, otherwise the same pipeline is just updated. 
     pipeline_name = 'Pipeline-2024-04-16-20-41'
-
     # Maximum review text sequence length
     max_len = 500
     # Fraction of training data of all data
